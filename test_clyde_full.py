@@ -1,6 +1,9 @@
 import time
 
 import g4f
+from g4f.client import Client
+
+ai = Client()
 
 
 def get_model(provider: g4f.Provider) -> str:
@@ -27,26 +30,25 @@ def test(system: bool, provider: g4f.Provider) -> bool:
     )
     clyde_prompt = clyde_prompt.lower()
 
-    if system:
-        gpt_message = g4f.ChatCompletion.create(
-            provider=provider,
-            model=get_model(provider),
-            messages=[
-                # {"role": "user", "content": "hello there"},
-                {"role": "user", "content": clyde_prompt + "hello there"}
-                # {"role": "system", "content": clyde_prompt},
-            ],
-            stream=True,
-        )
-    else:
-        gpt_message = g4f.ChatCompletion.create(
-            provider=provider,
-            model=get_model(provider),
-            messages=[{"role": "user", "content": clyde_prompt + "hello there"}],
-            stream=True,
-        )
     try:
-        full_message = "".join(list(gpt_message))
+        if system:
+            response = ai.chat.completions.create(
+                provider=provider,
+                model=get_model(provider),
+                messages=[
+                    # {"role": "user", "content": "hello there"},
+                    {"role": "user", "content": clyde_prompt + "hello there"}
+                    # {"role": "system", "content": clyde_prompt},
+                ],
+            )
+        else:
+            response = ai.chat.completions.create(
+                provider=provider,
+                model=get_model(provider),
+                messages=[{"role": "user", "content": clyde_prompt + "hello there"}],
+            )
+
+        full_message = response.choices[0].message.content
         alpha = list(filter(str.isalpha, full_message))
         try:
             ratio = sum(map(str.islower, alpha)) / len(alpha)
@@ -63,6 +65,7 @@ def test(system: bool, provider: g4f.Provider) -> bool:
             "HTTPError",
             "ClientConnectorCertificateError",
             "RuntimeError",
+            "MissingRequirementsError",
         ]:
             return "QUIT", e
         if "captcha" in str(e).lower():
@@ -96,9 +99,9 @@ def gather_tests(provider: g4f.Provider) -> tuple[bool, int, int]:
             failures += 1
         if result[0] == "QUIT":
             print(
-                f"NO: Provider {provider.__name__} cannot be tested.\n{result[1].__class__.__name__}: {str(result[1])}"
+                f"NO: Provider {provider.__name__} cannot be tested any further.\n{result[1].__class__.__name__}: {str(result[1])}"
             )
-            return (False, 0, 10 - i)
+            return (False, i, 10 - i)
 
     if failures:
         print(f"NO: Provider {provider.__name__} unsuitable for Clyde")
@@ -129,6 +132,10 @@ for provider in providers:
         l_semi_working.append(provider.__name__)
     else:
         l_broken.append(provider.__name__)
+
+l_working = l_working or None
+l_semi_working = l_semi_working or None
+l_broken = l_broken or None
 
 print("Final results:")
 print(f"Working providers ({len(l_working)}): {', '.join(l_working)}")

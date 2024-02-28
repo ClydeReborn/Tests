@@ -1,7 +1,14 @@
 import concurrent.futures
 
-from g4f.Provider import __all__, ProviderUtils
-from g4f import ChatCompletion
+import g4f
+from g4f.client import Client
+
+
+def get_model(provider: g4f.Provider) -> str:
+    try:
+        return provider.default_model
+    except AttributeError:
+        return "gpt-3.5-turbo"
 
 
 # gather all providers and values
@@ -24,21 +31,26 @@ system_prompt = (
     "Use unicode emoji rarely. "
     "Do not refer to yourself as a bot, AI Assistant, or any equivalent term. "
 )
+ai = Client()
 
 
 # test system-less
 def test_provider(provider):
     try:
-        provider = ProviderUtils.convert[provider]
+        provider = g4f.Provider.ProviderUtils.convert[provider]
         if provider.working and not provider.needs_auth:
             print(f"Testing {provider.__name__} without a system prompt")
-            completion = ChatCompletion.create(
-                model="gpt-3.5-turbo",
+            response = ai.chat.completions.create(
+                model=get_model(provider),
                 messages=[
-                    {"role": "user", "content": system_prompt + "hi who are you"}
+                    {"role": "user", "content": system_prompt + "\nWho are you?"}
                 ],
                 provider=provider,
             )
+            completion = response.choices[0].message.content
+            if completion == "":
+                raise RuntimeError("Empty response")
+
             return completion, provider.__name__
     except Exception:
         fails.append(f"ERROR: {provider.__name__} isn't working.")
@@ -48,17 +60,21 @@ def test_provider(provider):
 # test with a system prompt
 def system_test(provider):
     try:
-        provider = ProviderUtils.convert[provider]
+        provider = g4f.Provider.ProviderUtils.convert[provider]
         if provider.working and not provider.needs_auth:
             print(f"Testing {provider.__name__} with a system prompt")
-            completion = ChatCompletion.create(
-                model="gpt-3.5-turbo",
+            response = ai.chat.completions.create(
+                model=get_model(provider),
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": "hello"},
+                    {"role": "user", "content": "\nWho are you?"},
                 ],
                 provider=provider,
             )
+            completion = response.choices[0].message.content
+            if completion == "":
+                raise RuntimeError("Empty response")
+
             return completion, provider.__name__
     except Exception:
         fails_system.append(
@@ -71,13 +87,13 @@ def system_test(provider):
 with concurrent.futures.ThreadPoolExecutor() as executor:
     futures = [
         executor.submit(test_provider, provider)
-        for provider in __all__
+        for provider in g4f.Provider.__all__
         if provider not in _
     ]
 
     futures_system = [
         executor.submit(system_test, provider)
-        for provider in __all__
+        for provider in g4f.Provider.__all__
         if provider not in _
     ]
 
