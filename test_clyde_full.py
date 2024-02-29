@@ -46,6 +46,7 @@ def test(system: bool, provider: g4f.Provider) -> bool:
                 provider=provider,
                 model=get_model(provider),
                 messages=[{"role": "user", "content": clyde_prompt + "hello there"}],
+                timeout=5,
             )
 
         full_message = response.choices[0].message.content
