@@ -43,7 +43,7 @@ def test_provider(provider):
             response = ai.chat.completions.create(
                 model=get_model(provider),
                 messages=[
-                    {"role": "user", "content": system_prompt + "\nWho are you?"}
+                    {"role": "user", "content": system_prompt + "who are you?"}
                 ],
                 provider=provider,
             )
@@ -67,7 +67,7 @@ def system_test(provider):
                 model=get_model(provider),
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": "\nWho are you?"},
+                    {"role": "user", "content": "who are you?"},
                 ],
                 provider=provider,
             )
