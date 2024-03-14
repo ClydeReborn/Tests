@@ -42,9 +42,7 @@ def test_provider(provider):
             print(f"Testing {provider.__name__} without a system prompt")
             response = ai.chat.completions.create(
                 model=get_model(provider),
-                messages=[
-                    {"role": "user", "content": system_prompt + "who are you?"}
-                ],
+                messages=[{"role": "user", "content": system_prompt + "who are you?"}],
                 provider=provider,
             )
             completion = response.choices[0].message.content

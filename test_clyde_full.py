@@ -54,15 +54,18 @@ def test(system: bool, provider: g4f.Provider) -> bool:
             ratio = sum(map(str.islower, alpha)) / len(alpha)
             print(f"Response: {full_message} ({round(ratio*100, 2)}% lowercase)")
     except Exception as e:
-        if str(e.__class__.__name__) in [
-            "MissingRequirementsError",  # provider requires selenium
-            "ClientResponseError",  # provider returned a status code eg. 401, 402, 403, 429
-            "ResponseStatusError",  # same as above
-            "RateLimitError",  # provider is ratelimited, or returned a 500 error from a dependent service
-            "RuntimeError",  # provider returned a CAPTCHA, eg. bing
-            "ServerDisconnectedError",  # provider has gone offline while being tested
-            "ClientConnectorError"  # provider is offline and cannot be tested
-        ]:
+        if (
+            str(e.__class__.__name__)
+            in [
+                "MissingRequirementsError",  # provider requires selenium
+                "ClientResponseError",  # provider returned a status code eg. 401, 402, 403, 429
+                "ResponseStatusError",  # same as above
+                "RateLimitError",  # provider is ratelimited, or returned a 500 error from a dependent service
+                "RuntimeError",  # provider returned a CAPTCHA, eg. bing
+                "ServerDisconnectedError",  # provider has gone offline while being tested
+                "ClientConnectorError",  # provider is offline and cannot be tested
+            ]
+        ):
             return "QUIT", e
         newline = "\n"
         print(f"FAILED: {e.__class__.__name__}: {str(e).split(newline, maxsplit=1)[0]}")
