@@ -1,0 +1,24 @@
+name: Test Providers
+on: 
+  schedule:
+  - cron: 0 12 * * *
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Test Providers
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@main
+      - name: Set up Python environment
+        uses: actions/setup-python@main
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install -U g4f[all]
+      - name: Test all providers
+        run: |
+          python test_clyde_full.py
+        
