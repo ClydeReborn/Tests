@@ -4,7 +4,6 @@ import g4f
 from g4f.client import Client
 
 ai = Client()
-global last_message
 last_message = None
 
 
@@ -76,6 +75,7 @@ def test(system: bool, provider: g4f.Provider) -> tuple[bool, str]:
         print(f"FAILED: {e.__class__.__name__}: {str(e).split(newline, maxsplit=1)[0]}")
         return False, None
 
+    global last_message
     if last_message == full_message:
         print("FAILED: repetition detected")
         return False, None
