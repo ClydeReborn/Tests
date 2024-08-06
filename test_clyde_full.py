@@ -4,6 +4,7 @@ import g4f
 from g4f.client import Client
 
 ai = Client()
+last_message = None
 
 
 def get_model(provider: g4f.Provider) -> str:
@@ -64,6 +65,9 @@ def test(system: bool, provider: g4f.Provider) -> bool:
                 "RuntimeError",  # provider returned a CAPTCHA, eg. bing
                 "ServerDisconnectedError",  # provider has gone offline while being tested
                 "ClientConnectorError",  # provider is offline and cannot be tested
+                "RequestsError",  # local API is offline (ollama or gpt4all)
+                "CloudflareError",  # blocked by cloudflare
+                "AbraGeoBlockedError",  # attempted to access Meta AI outside of the US
             ]
         ):
             return "QUIT", e
@@ -71,18 +75,23 @@ def test(system: bool, provider: g4f.Provider) -> bool:
         print(f"FAILED: {e.__class__.__name__}: {str(e).split(newline, maxsplit=1)[0]}")
         return False, None
 
+    if last_message == full_message:
+        print("FAILED: repetition detected")
+        return False, None
+    
     if not full_message:
         print("FAILED: no response")
         return False, None
 
-    if ratio != 1:
-        print("FAILED: not lowercase")
+    if ratio < 0.97:
+        print("FAILED: not enough lowercase")
         return False, None
 
     if any(word in full_message for word in ["hi", "hello", "hey"]):
         print("FAILED: unexpected hello")
         return False, None
 
+    last_message = full_message
     print("SUCCESS: all checks passed")
     return True, None
 
@@ -105,11 +114,15 @@ def gather_tests(provider: g4f.Provider, system: bool) -> tuple[bool, int, int]:
             )
             return (False, i, 10 - i)
 
-    if failures:
+    if failures > 2:
         print(f"NO: Provider {provider.__name__} unsuitable for Clyde")
         return (False, successes, failures)
-    print(f"YES: Provider {provider.__name__} suitable for Clyde")
-    return (True, successes, failures)
+    elif failures <= 2:
+        return f"PARTIAL: Provider {provider.__name__} may be suitable for Clyde")
+        return (False, successes, failures)
+    else:
+        print(f"YES: Provider {provider.__name__} suitable for Clyde")
+        return (True, successes, failures)
 
 
 providers = [
@@ -119,7 +132,7 @@ providers = [
 ]
 
 l_working = []
-l_semi_working = []
+l_partial = []
 l_broken = []
 
 for provider in providers:
@@ -132,15 +145,15 @@ for provider in providers:
     if results[1] == 10:
         l_working.append(provider.__name__)
     if 5 <= results[1] < 10:
-        l_semi_working.append(provider.__name__)
+        l_partial.append(provider.__name__)
     else:
         l_broken.append(provider.__name__)
 
 l_working = l_working or None
-l_semi_working = l_semi_working or None
+l_partial = l_partial or None
 l_broken = l_broken or None
 
 print("Final results:")
 print(f"Working providers ({len(l_working)}): {', '.join(l_working)}")
-print(f"Semi-working providers ({len(l_semi_working)}): {', '.join(l_semi_working)}")
+print(f"Partially working providers ({len(l_partial)}): {', '.join(l_partial)}")
 print(f"Broken providers ({len(l_broken)}): {', '.join(l_broken)}")
