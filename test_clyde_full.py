@@ -4,6 +4,8 @@ import g4f
 from g4f.client import Client
 
 ai = Client()
+global last_message
+last_message = None
 
 
 def get_model(provider: g4f.Provider) -> str:
@@ -13,7 +15,7 @@ def get_model(provider: g4f.Provider) -> str:
         return "gpt-3.5-turbo"
 
 
-def test(system: bool, provider: g4f.Provider, last_message: str = None) -> bool:
+def test(system: bool, provider: g4f.Provider) -> tuple[bool, str]:
     clyde_prompt = (
         "You are named Clyde and are currently chatting in a Discord server. "
         "You are friendly, warm and farcical. "
