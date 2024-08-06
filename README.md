@@ -11,3 +11,5 @@ The comprehensive test will run all providers 10 times, it will give you reports
 
 Be aware the comprehensive test may take a longer time to finish, you should use it instead of the quick test for the best results.<br>
 After you are done testing, plug in your working provider of choice back into [Clyde](https://github.com/ClydeReborn/Clyde) and get it running, enjoy!
+
+The comprehensive test will also be executed automatically, to give you a daily list of working providers.
