@@ -145,7 +145,7 @@ for provider in providers:
 
     if results[1] == 10:
         l_working.append(provider.__name__)
-    if 5 <= results[1] < 10:
+    if 8 <= results[1] < 10:
         l_partial.append(provider.__name__)
     else:
         l_broken.append(provider.__name__)
