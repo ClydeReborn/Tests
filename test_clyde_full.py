@@ -150,10 +150,6 @@ for provider in providers:
     else:
         l_broken.append(provider.__name__)
 
-l_working = l_working or None
-l_partial = l_partial or None
-l_broken = l_broken or None
-
 print("Final results:")
 print(f"Working providers ({len(l_working)}): {', '.join(l_working)}")
 print(f"Partially working providers ({len(l_partial)}): {', '.join(l_partial)}")
