@@ -58,7 +58,7 @@ def test(system: bool, provider: g4f.Provider) -> tuple[bool, str]:
         if (
             str(e.__class__.__name__)
             in [
-                "MissingRequirementsError",  # provider requires selenium
+                "MissingRequirementsError",  # provider requires an unsupported dependency
                 "ClientResponseError",  # provider returned a status code eg. 401, 402, 403, 429
                 "ResponseStatusError",  # same as above
                 "RateLimitError",  # provider is ratelimited, or returned a 500 error from a dependent service
@@ -68,6 +68,9 @@ def test(system: bool, provider: g4f.Provider) -> tuple[bool, str]:
                 "RequestsError",  # local API is offline (ollama or gpt4all)
                 "CloudflareError",  # blocked by cloudflare
                 "AbraGeoBlockedError",  # attempted to access Meta AI outside of the US
+                "ContentTypeError",  # value returned by API wasn't JSON (likely due to an internal error)
+                "ModelNotSupppotedError",  # default model is invalid
+                "TypeError",  # provider has a bad Python re-implementation
             ]
         ):
             return "QUIT", e
@@ -79,7 +82,7 @@ def test(system: bool, provider: g4f.Provider) -> tuple[bool, str]:
     if last_message == full_message:
         print("FAILED: repetition detected")
         return False, None
-    
+
     if not full_message:
         print("FAILED: no response")
         return False, None
@@ -100,6 +103,9 @@ def test(system: bool, provider: g4f.Provider) -> tuple[bool, str]:
 def gather_tests(provider: g4f.Provider, system: bool) -> tuple[bool, int, int]:
     successes = 0
     failures = 0
+
+    global last_message
+    last_message = None
 
     for i in range(10):
         time.sleep(1)
@@ -136,12 +142,16 @@ l_working = []
 l_partial = []
 l_broken = []
 
+all_results = {}
+
 for provider in providers:
     print(f"Testing {provider.__name__}")
     results = gather_tests(provider, True)
     print(
         f"Success: {results[1]}, Failed: {results[2]}\nSuccess rate: {round(results[1] / 10 * 100, 2)}%\n\n"
     )
+
+    all_results[provider.__name__] = results[1]
 
     if results[1] == 10:
         l_working.append(provider.__name__)
@@ -154,3 +164,11 @@ print("Final results:")
 print(f"Working providers ({len(l_working)}): {', '.join(l_working)}")
 print(f"Partially working providers ({len(l_partial)}): {', '.join(l_partial)}")
 print(f"Broken providers ({len(l_broken)}): {', '.join(l_broken)}")
+
+print("List of providers:\n")
+for provider, results in sorted(
+    zip(all_results.keys(), all_results.values()), key=lambda k: k[1], reverse=True
+):
+    print(f"{provider}:", f"{results}/10")
+    if results >= 9:
+        print("**RECOMMENDED PROVIDER**")
