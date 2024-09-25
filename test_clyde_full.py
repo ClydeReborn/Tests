@@ -124,7 +124,7 @@ def gather_tests(provider: g4f.Provider, system: bool) -> tuple[bool, int, int]:
     if failures > 2:
         print(f"NO: Provider {provider.__name__} unsuitable for Clyde")
         return (False, successes, failures)
-    elif failures <= 2:
+    elif 0 < failures <= 2:
         print(f"PARTIAL: Provider {provider.__name__} may be suitable for Clyde")
         return (False, successes, failures)
     else:
