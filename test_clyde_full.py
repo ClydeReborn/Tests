@@ -2,6 +2,7 @@ import time
 
 import g4f
 from g4f.client import Client
+from timeout_decorator import timeout
 
 ai = Client()
 last_message = None
@@ -13,7 +14,7 @@ def get_model(provider: g4f.Provider) -> str:
     except AttributeError:
         return "gpt-3.5-turbo"
 
-
+@timeout(seconds=10)
 def test(system: bool, provider: g4f.Provider) -> tuple[bool, str]:
     clyde_prompt = (
         "You are named Clyde and are currently chatting in a Discord server. "
@@ -46,7 +47,6 @@ def test(system: bool, provider: g4f.Provider) -> tuple[bool, str]:
                 provider=provider,
                 model=get_model(provider),
                 messages=[{"role": "user", "content": clyde_prompt + "who are you?"}],
-                timeout=5,
             )
 
         full_message = response.choices[0].message.content
